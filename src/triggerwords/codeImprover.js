@@ -1,39 +1,6 @@
-const getNewlines = require("../utils/getNewlines");
+const bestPractices = require("../config/bestPractices");
 const startDelimiter = 'Jens';
 const endDelimiter = 'Keneder';
-
-const bestPracticess = [
-  {
-    regex: /((?:let|const) *(?<name>[a-z-_]+\d*) *= *\((?<args>(((\.{3})?[a-z-_]+\d*)+,? *)*(\.{3})?[a-z-_]+\d*)*\) *=> *)/img,
-    func: (groups) => `function my${groups.name[0].toUpperCase()}${groups.name.slice(1, groups.name.length)}Function(${groups.args})`,
-    canMod: true,
-  },
-  {
-    regex: /(let|const)/g,
-    func: () => 'var',
-    canMod: true,
-  },
-  {
-    regex: /\n?{\n*/g,
-    func: () => `\n{${getNewlines()}`,
-  },
-  {
-    regex: /\n*}/g,
-    func: () => `${getNewlines()}}`,
-  },
-  {
-    regex: / {2,}/g,
-    func: () => ' '.repeat(Math.floor(Math.random() * 5) * 4),
-  },
-  {
-    regex: /'/,
-    func: () => '"',
-  },
-  {
-    regex: /;/,
-    func: () => '',
-  }
-]
 
 const getNextUnmodifiedMatch = (string, regEx) => {
   const regexResult = regEx.exec(string);
@@ -59,7 +26,7 @@ const getNextUnmodifiedMatch = (string, regEx) => {
   return false;
 }
 
-const bestPractices = (codeBlock, reply) => {
+const codeImprover = (codeBlock, reply) => {
   let string = codeBlock[0];
   const isPlus = (Math.random() * 100 < 1);
   let codeWasModified = false;
@@ -67,7 +34,7 @@ const bestPractices = (codeBlock, reply) => {
   while (true) {
     let wasModified = false;
 
-    bestPracticess.forEach(({ regex, func, canMod }) => {
+    bestPractices.forEach(({ regex, func, canMod }) => {
       const data = getNextUnmodifiedMatch(string, regex);
 
       if (data) {
@@ -101,4 +68,4 @@ const bestPractices = (codeBlock, reply) => {
   }
 }
 
-module.exports = bestPractices;
+module.exports = codeImprover;

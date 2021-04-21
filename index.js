@@ -1,6 +1,7 @@
 const Discord = require('discord-module');
 const Message = require('discord-module/classes/Message');
-const bestPractices = require('./src/triggerwords/bestPratices');
+const codeFlex = require('./src/triggerwords/codeFlex');
+const codeImprover = require('./src/triggerwords/codeImprover');
 
 const discord = new Discord({
   token: require('./token'),
@@ -8,8 +9,12 @@ const discord = new Discord({
 
 const triggerWords = [
   {
-    func: bestPractices,
+    func: codeImprover,
     regex: /```js\n+(.+\n*)*\n+```/gm,
+  },
+  {
+    func: codeFlex,
+    regex: /code/i,
   }
 ];
 
