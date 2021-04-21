@@ -6,10 +6,12 @@ const bestPracticess = [
   {
     regex: /((?:let|const) *(?<name>[a-z-_]+\d*) *= *\((?<args>(((\.{3})?[a-z-_]+\d*)+,? *)*(\.{3})?[a-z-_]+\d*)*\) *=> *)/img,
     func: (groups) => `function my${groups.name[0].toUpperCase()}${groups.name.slice(1, groups.name.length)}Function(${groups.args})`,
+    canMod: true,
   },
   {
-    regex: /(let|const|var)/g,
+    regex: /(let|const)/g,
     func: () => 'var',
+    canMod: true,
   },
   {
     regex: /\n?{\n*/g,
@@ -22,10 +24,18 @@ const bestPracticess = [
   {
     regex: / {2,}/g,
     func: () => ' '.repeat(Math.floor(Math.random() * 5) * 4),
+  },
+  {
+    regex: /'/,
+    func: () => '"',
+  },
+  {
+    regex: /;/,
+    func: () => '',
   }
 ]
 
-const getZ = (string, regEx) => {
+const getNextUnmodifiedMatch = (string, regEx) => {
   const regexResult = regEx.exec(string);
 
   if (regexResult) {
@@ -36,32 +46,42 @@ const getZ = (string, regEx) => {
     const checkEnd = string.substring(resIndex + resLength, resIndex + resLength + endDelimiter.length);
 
     if (checkEnd === endDelimiter && checkStart === startDelimiter) {
-      return getZ(string, regEx);
+      return getNextUnmodifiedMatch(string, regEx);
     }
 
     return {
-      resIndex: resIndex,
+      resIndex,
       resLength,
       groups: regexResult.groups,
     };
   }
+
+  return false;
 }
 
-function bestPractices(codeBlock, reply, message) {
-  var string = codeBlock[0];
-  var isPlus = (Math.random() * 100 < 1);
+const bestPractices = (codeBlock, reply) => {
+  let string = codeBlock[0];
+  const isPlus = (Math.random() * 100 < 1);
+  let codeWasModified = false;
 
   while (true) {
-    var wasModified = false;
+    let wasModified = false;
 
-    bestPracticess.forEach(({ regex, func }) => {
-      var data = getZ(string, regex);
+    bestPracticess.forEach(({ regex, func, canMod }) => {
+      const data = getNextUnmodifiedMatch(string, regex);
 
       if (data) {
-        var { resIndex, resLength, groups } = data;
+        const { resIndex, resLength, groups } = data;
+        const stringBeforeMod = string.substring(0, resIndex + isPlus);
+        const stringAfterMod =  string.substring(resIndex + isPlus + resLength, string.length);
+        const mod = func(groups);
 
-        string = string.substring(0, resIndex + isPlus) + startDelimiter + func(groups) + endDelimiter + string.substring(resIndex + isPlus + resLength, string.length);
+        string = stringBeforeMod + startDelimiter + mod + endDelimiter + stringAfterMod;
         wasModified = true;
+
+        if (canMod) {
+          codeWasModified = true;
+        }
       }
     });
 
@@ -70,11 +90,15 @@ function bestPractices(codeBlock, reply, message) {
     }
   }
 
-  reply(`Ich hab gesehen, dass du nicht die besten best practices genutzt hast. Ich habe deinen code mal optimiert.\n\n${string
+  if (codeWasModified) {
+    reply(`Ich hab gesehen, dass du nicht die besten best practices genutzt hast. Ich habe deinen code mal optimiert.\n\n${string
       .replaceAll(endDelimiter, '').replaceAll(startDelimiter, '')
     }`);
-  reply('Denk immer daran:');
-  reply('https://media.discordapp.net/attachments/749388402209718292/832642412534038588/bd4cd26c-d566-4dc3-9d39-ab8043487ea5.jpg');
+    reply('Denk immer daran:');
+    reply('https://media.discordapp.net/attachments/749388402209718292/832642412534038588/bd4cd26c-d566-4dc3-9d39-ab8043487ea5.jpg');
+  } else {
+    reply('Es freut mich zu sehen dass du meine besten best practices nutzt.');
+  }
 }
 
 module.exports = bestPractices;
